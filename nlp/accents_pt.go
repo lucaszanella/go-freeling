@@ -18,12 +18,24 @@ type AccentsPT struct {
 }
 
 func NewAccentsPT() *AccentsPT {
+	withoutAcc := make(map[string]string)
+	withAcc := make(map[string]string)
+	withoutAcc["á"] = "a"
+	withoutAcc["é"] = "e"
+	withoutAcc["í"] = "i"
+	withoutAcc["ó"] = "o"
+	withoutAcc["ú"] = "u"
+	withAcc["a"] = "á"
+	withAcc["e"] = "é"
+	withAcc["i"] = "í"
+	withAcc["o"] = "ó"
+	withAcc["u"] = "ú"
 	return &AccentsPT{
-		withAcc:    make(map[string]string),
-		withoutAcc: make(map[string]string),
+		withAcc:    withAcc,
+		withoutAcc: withoutAcc,
 	}
 }
 
 func (this *AccentsPT) FixAccentuation(candidates *set.Set, suf *sufrule) {
-	LOG.Trace("ES accentuation. Candidates " + candidates.String())
+	LOG.Trace("PT accentuation. Candidates " + candidates.String())
 }
