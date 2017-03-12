@@ -1,6 +1,8 @@
 package nlp
 
-import set "gopkg.in/fatih/set.v0"
+import (
+	set "gopkg.in/fatih/set.v0"
+)
 
 type Accent struct {
 	who AccentsModule
@@ -24,4 +26,20 @@ func NewAccent(lang string) *Accent {
 //Wrapper methods: just call the wrapped accents module.
 func (this *Accent) FixAccentutation(candidates *set.Set, suf *sufrule) {
 	this.who.FixAccentuation(candidates, suf)
+}
+
+type AccentsModule interface {
+	FixAccentuation(*set.Set, *sufrule)
+}
+
+type AccentsDefault struct {
+}
+
+func NewAccetsDefault() *AccentsDefault {
+	LOG.Trace("Create default accent handler")
+	return &AccentsDefault{}
+}
+
+func (this *AccentsDefault) FixAccentuation(candidates *set.Set, suf *sufrule) {
+	LOG.Trace("Default accentuation. Candidates " + candidates.String())
 }

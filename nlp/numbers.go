@@ -1,11 +1,7 @@
-package numbers
-
-import (
-    "github.com/lucaszanella/go-freeling/nlp"
-)
+package nlp
 
 type NumbersStatus struct {
-	nlp.AutomatStatus
+	AutomatStatus
     /// partial value of partially build number expression
     bilion,milion,units int64
     block int

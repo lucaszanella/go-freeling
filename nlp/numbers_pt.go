@@ -1,8 +1,7 @@
-package numbers
+package nlp
 
 import (
 	"container/list"
-    "github.com/lucaszanella/go-freeling/nlp"
 	set "gopkg.in/fatih/set.v0"
     "fmt"
 	//"io/ioutil"
@@ -79,7 +78,7 @@ const (
 )
 
 type NumbersPT struct {
-	nlp.Automat
+	Automat
     Status *NumbersStatus
     value map[string]float64
     tok map[string]int
@@ -196,8 +195,8 @@ func NewNumbersPT(locFile string) *NumbersPT {
 
 	//this.this.Final.Add(N_ST_M)
 	var s, t int
-	for s = 0; s < nlp.AUTOMAT_MAX_STATES; s++ {
-		for t = 0; t < nlp.AUTOMAT_MAX_TOKENS; t++ {
+	for s = 0; s < AUTOMAT_MAX_STATES; s++ {
+		for t = 0; t < AUTOMAT_MAX_TOKENS; t++ {
 			this.Trans[s][t] = N_ST_STOP
 		}
 	}
@@ -318,7 +317,7 @@ func NewNumbersPT(locFile string) *NumbersPT {
 	return &this
 }
 
-func (this *NumbersPT) ComputeToken(state int, j *list.Element, se *nlp.Sentence) int {
+func (this *NumbersPT) ComputeToken(state int, j *list.Element, se *Sentence) int {
     form := j.Value
     fmt.Println(form)
     
