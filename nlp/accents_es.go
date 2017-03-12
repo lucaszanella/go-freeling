@@ -5,7 +5,6 @@ import (
 	"regexp"
 )
 
-
 type AccentsES struct {
 	llanaAcc        *regexp.Regexp
 	agudaMal        *regexp.Regexp
