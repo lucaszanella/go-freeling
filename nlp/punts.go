@@ -14,6 +14,7 @@ type Punts struct {
 }
 
 func NewPunts(puntFile string) *Punts {
+	LOG.Trace("CREATING PUNTS", MOD_PUNTS)
 	this := Punts{}
 	this.Database = NewDatabaseFromFile(puntFile)
 	this.tagOthers = this.accessDatabase(PUNTS_OTHER)
@@ -21,18 +22,22 @@ func NewPunts(puntFile string) *Punts {
 	return &this
 }
 
-func (this *Punts) analyze(se *Sentence) {
+func (this *Punts) Analyze(se *Sentence) {
 	var form string
 	var i *list.Element
+	LOG.Trace("STARTING PUNTS ANALYZE")
 
 	for i = se.Front(); i != nil; i = i.Next() {
-		form = i.Value.(*Word).GetForm()
+		form = i.Value.(*Word).getForm()
 		TRACE(3, "Checking form "+form, MOD_PUNTS)
 		data := this.accessDatabase(form)
 		if data != "" {
+			LOG.Trace("   ["+form+"] found in map: known punctuation")
 			TRACE(3, "   ["+form+"] found in map: known punctuation", MOD_PUNTS)
 			lemma := data[0:strings.Index(data, " ")]
 			tag := data[strings.Index(data, " ")+1:]
+			LOG.Trace("   lemma is ["+lemma+"]" + " tag is " + tag)
+
 			i.Value.(*Word).setAnalysis(NewAnalysis(lemma, tag))
 			i.Value.(*Word).lockAnalysis()
 		} else {

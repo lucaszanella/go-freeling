@@ -114,7 +114,7 @@ func (this *Disambiguator) Analyze(ss *list.List) {
 				prob := pair.second
 				if prob > 0 {
 					if this.wnids[id] != nil {
-						println(id, w.Value.(*Word).GetForm(), this.wnids[id].lemma, this.wnids[id].gloss, this.wnids[id].domain)
+						println(id, w.Value.(*Word).getForm(), this.wnids[id].lemma, this.wnids[id].gloss, this.wnids[id].domain)
 					}
 				}
 			}

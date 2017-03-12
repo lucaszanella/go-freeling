@@ -116,7 +116,7 @@ func NewMaco(opts *MacoOptions) *Maco {
 
 func (this *Maco) Analyze(s *Sentence) {
 	if this.PunctuationDetection && this.punct != nil {
-		this.punct.analyze(s)
+		this.punct.Analyze(s)
 	}
 
 	if this.DictionarySearch && this.dic != nil {

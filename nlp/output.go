@@ -24,7 +24,7 @@ func (this Output) PrintTree(output *string, n *ParseTreeIterator, depth int) {
 		if w == nil {
 			return
 		}
-		*output += "(" + w.GetForm() + " " + w.getLemma(0) + " " + w.getTag(0) + ")\n"
+		*output += "(" + w.getForm() + " " + w.getLemma(0) + " " + w.getTag(0) + ")\n"
 		//TODO: outputSense
 	} else {
 		if n.pnode.info.(*Node).isHead() {

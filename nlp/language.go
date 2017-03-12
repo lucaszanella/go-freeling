@@ -327,10 +327,10 @@ func (this *Word) numKBest() int {
 }
 
 func (this *Word) setForm(form string) { this.form = form }
-func (this *Word) GetForm() string     { return this.form }
+func (this *Word) getForm() string     { return this.form }
 
 func (this *Word) FormTag() string {
-	form := this.GetForm()
+	form := this.getForm()
 	tag := ""
 	var senses *list.List
 	for a := this.Front(); a != nil; a = a.Next() {
@@ -459,11 +459,11 @@ func (this *Sentence) rebuildWordIndex() {
 	for w := this.Front(); w != nil; w = w.Next() {
 		if w.Value.(*Word).expired {
 			j := w.Prev()
-			LOG.Trace("Word " + w.Value.(*Word).GetForm() + " is going to be erased")
+			LOG.Trace("Word " + w.Value.(*Word).getForm() + " is going to be erased")
 			EmptyFunc(this.Remove(w))
 			w = j
 		} else {
-			LOG.Trace("Word " + w.Value.(*Word).GetForm() + " has " + strconv.Itoa(w.Value.(*Word).getNAnalysis()) + " analysis")
+			LOG.Trace("Word " + w.Value.(*Word).getForm() + " has " + strconv.Itoa(w.Value.(*Word).getNAnalysis()) + " analysis")
 			this.wpos[i] = w.Value.(*Word)
 			w.Value.(*Word).setPosition(i)
 			i++

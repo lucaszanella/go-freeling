@@ -129,12 +129,12 @@ func (this *NERModule) BuildMultiword(se *Sentence, start *list.Element, end *li
 	LOG.Trace("  Building multiword")
 	for i = start; i != end; i = i.Next() {
 		mw.PushBack(i.Value.(*Word))
-		form += i.Value.(*Word).GetForm() + "_"
+		form += i.Value.(*Word).getForm() + "_"
 		LOG.Trace("   added next [" + form + "]")
 	}
 
 	mw.PushBack(i.Value.(*Word))
-	form += i.Value.(*Word).GetForm()
+	form += i.Value.(*Word).getForm()
 	LOG.Trace("   added next [" + form + "]")
 
 	w := NewMultiword(form, mw)
@@ -145,8 +145,8 @@ func (this *NERModule) BuildMultiword(se *Sentence, start *list.Element, end *li
 		if this.splitNPs && start != end {
 			LOG.Trace("Valid Multiword. Split NP is on: keeping separate words")
 			for j := start; j != nil && j != end1; j = j.Next() {
-				if strings.Title(j.Value.(*Word).GetForm()) == j.Value.(*Word).GetForm() {
-					LOG.Trace("   Splitting. Set " + this.NETag + " for " + j.Value.(*Word).GetForm())
+				if strings.Title(j.Value.(*Word).getForm()) == j.Value.(*Word).getForm() {
+					LOG.Trace("   Splitting. Set " + this.NETag + " for " + j.Value.(*Word).getForm())
 					j.Value.(*Word).setAnalysis(NewAnalysis(j.Value.(*Word).getLCForm(), this.NETag))
 					j.Value.(*Word).setFoundInDict(true)
 				}
@@ -182,7 +182,7 @@ func (this *NERModule) ValidMultiWord(w *Word, st *NERStatus) bool {
 	if this.TitleLength > 0 && mw.Len() >= this.TitleLength {
 		lw := false
 		for p := mw.Front(); p != nil; p = p.Next() {
-			lw = HasLowercase(p.Value.(*Word).GetForm())
+			lw = HasLowercase(p.Value.(*Word).getForm())
 		}
 		return lw
 	} else {
@@ -396,7 +396,7 @@ func (this *NP) ComputeToken(state int, j *list.Element, se *Sentence) int {
 	var token int
 	var sbegin bool
 
-	formU = j.Value.(*Word).GetForm()
+	formU = j.Value.(*Word).getForm()
 	form = j.Value.(*Word).getLCForm()
 
 	token = NP_TK_other
@@ -439,7 +439,7 @@ func (this *NP) ComputeToken(state int, j *list.Element, se *Sentence) int {
 		} else {
 			nxt := j
 			nxt = nxt.Next()
-			if nxt != nil && IsCapitalized(nxt.Value.(*Word).GetForm()) {
+			if nxt != nil && IsCapitalized(nxt.Value.(*Word).getForm()) {
 				token = If(sbegin, NP_TK_sNounUpp, NP_TK_mUpper).(int)
 			}
 		}
@@ -503,7 +503,7 @@ func (this *NP) matching(se *Sentence, i *list.Element) bool {
 	var newstate, state, token, fstate int
 	found := false
 
-	LOG.Trace("Checking for mw starting at word '" + i.Value.(*Word).GetForm() + "'")
+	LOG.Trace("Checking for mw starting at word '" + i.Value.(*Word).getForm() + "'")
 
 	pst := NewNERStatus()
 	se.setProcessingStatus(pst)
@@ -553,7 +553,7 @@ func (this *NP) analyze(se *Sentence) {
 				}
 			}
 		} else {
-			LOG.Trace("Word '" + i.Value.(*Word).GetForm() + "' is locked. Skipped.")
+			LOG.Trace("Word '" + i.Value.(*Word).getForm() + "' is locked. Skipped.")
 		}
 	}
 	if found {

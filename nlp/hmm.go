@@ -658,14 +658,14 @@ func (this *HMMTagger) FindStates(sent *Sentence) *list.List {
 	st := set.New()
 	ls := list.New()
 	w2 := sent.Front()
-	TRACE(3, "obtaining the states that may have emmited the initial word: "+w2.Value.(*Word).GetForm(), MOD_HMM)
+	TRACE(3, "obtaining the states that may have emmited the initial word: "+w2.Value.(*Word).getForm(), MOD_HMM)
 	for a2 := w2.Value.(*Word).selectedBegin(0).Element; a2 != nil; a2 = a2.Next() {
 		st.Add(&Bigram{"0", this.Tags.GetShortTag(a2.Value.(*Analysis).getTag())})
 	}
 	ls.PushBack(st)
 
 	for w1, w2 := w2, w2.Next(); w1 != nil && w2 != nil; w1, w2 = w2, w2.Next() {
-		TRACE(3, "obtaining the states that may have emmited the word: "+w2.Value.(*Word).GetForm(), MOD_HMM)
+		TRACE(3, "obtaining the states that may have emmited the word: "+w2.Value.(*Word).getForm(), MOD_HMM)
 		st := set.New()
 		for a1 := w1.Value.(*Word).selectedBegin(0).Element; a1 != nil; a1 = a1.Next() {
 			for a2 := w2.Value.(*Word).selectedBegin(0).Element; a2 != nil; a2 = a2.Next() {

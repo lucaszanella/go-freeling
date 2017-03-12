@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+	"github.com/lucaszanella/go-freeling/models"
 )
 
 func Split(s string, sep string) []string {
@@ -221,4 +222,30 @@ func CreateStringWithChar(n int, c string) string {
 		output[i] = c[0]
 	}
 	return string(output)
+}
+
+
+//Explains entire content of a list of sentences
+func Explain(sentences *list.List) string {
+
+	entities := make(map[string]int64)
+	body := ""
+	for ss := sentences.Front(); ss != nil; ss = ss.Next() {
+		se := models.NewSentenceEntity()
+		s := ss.Value.(*Sentence)
+		for ww := s.Front(); ww != nil; ww = ww.Next() {
+			w := ww.Value.(*Word)
+			if w.Front()!=nil {
+				a := w.Front().Value.(*Analysis)
+				te := models.NewTokenEntity(w.getForm(), a.getLemma(), a.getTag(), a.getProb())
+				if a.getTag() == TAG_NP {
+					entities[w.getForm()]++
+				}
+				body += w.getForm() + " "
+				se.AddTokenEntity(te)
+			}
+		}
+		body = strings.Trim(body, " ")
+	}
+	return body
 }

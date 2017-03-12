@@ -149,12 +149,12 @@ func (this *Locutions) BuildMultiword(se *Sentence, start *list.Element, end *li
 	var i *list.Element
 	for i = start; i != end; i = i.Next() {
 		mw.PushBack(i.Value.(*Word))
-		form += i.Value.(*Word).GetForm() + "_"
+		form += i.Value.(*Word).getForm() + "_"
 		LOG.Trace("added last [" + form + "]")
 	}
 
 	mw.PushBack(i.Value.(*Word))
-	form += i.Value.(*Word).GetForm()
+	form += i.Value.(*Word).getForm()
 	LOG.Trace("added last [" + form + "]")
 
 	w := NewMultiword(form, mw)
@@ -164,7 +164,7 @@ func (this *Locutions) BuildMultiword(se *Sentence, start *list.Element, end *li
 		se.InsertBefore(w, start)
 		for i = start; i != end; i = i.Next() {
 			i.Value.(*Word).expired = true
-			LOG.Trace("Word " + i.Value.(*Word).GetForm() + " expired")
+			LOG.Trace("Word " + i.Value.(*Word).getForm() + " expired")
 		}
 		i = end
 		LOG.Trace("New word inserted")
@@ -429,7 +429,7 @@ func (this *Locutions) matching(se *Sentence, i *list.Element) bool {
 	var newstate, state, token, fstate int
 	found := false
 
-	LOG.Trace("Checking for mw starting at word '" + i.Value.(*Word).GetForm() + "'")
+	LOG.Trace("Checking for mw starting at word '" + i.Value.(*Word).getForm() + "'")
 
 	pst := NewLocutionStatus()
 	se.setProcessingStatus(pst)
@@ -479,7 +479,7 @@ func (this *Locutions) analyze(se *Sentence) {
 				}
 			}
 		} else {
-			LOG.Trace("Word '" + i.Value.(*Word).GetForm() + "' is locked. Skipped.")
+			LOG.Trace("Word '" + i.Value.(*Word).getForm() + "' is locked. Skipped.")
 		}
 	}
 	if found {

@@ -112,7 +112,7 @@ func NewAffixes(sufFile string) *Affixes {
 
 func (this *Affixes) lookFowAffixes(w *Word, dic *Dictionary) {
 	if w.getNAnalysis() > 0 {
-		TRACE(2, "=== Known word "+w.GetForm()+", with "+strconv.Itoa(w.getNAnalysis())+" analysis. Looking only for 'always' affixes", MOD_AFFIX)
+		TRACE(2, "=== Known word "+w.getForm()+", with "+strconv.Itoa(w.getNAnalysis())+" analysis. Looking only for 'always' affixes", MOD_AFFIX)
 		TRACE(3, "--- Checkin SUF ---", MOD_AFFIX)
 		this.lookForAffixesInList(SUF, this.affixAlways[SUF], w, dic)
 		TRACE(3, "--- Checkin PREF ---", MOD_AFFIX)
@@ -120,7 +120,7 @@ func (this *Affixes) lookFowAffixes(w *Word, dic *Dictionary) {
 		TRACE(3, "--- Checkin SUF+PREF ---", MOD_AFFIX)
 		this.lookForCombinedAffixes(this.affixAlways[SUF], this.affixAlways[PREF], w, dic)
 	} else {
-		TRACE(2, "=== Unknown word "+w.GetForm()+", Looking only for any affixes", MOD_AFFIX)
+		TRACE(2, "=== Unknown word "+w.getForm()+", Looking only for any affixes", MOD_AFFIX)
 		TRACE(3, "--- Checkin SUF ---", MOD_AFFIX)
 		this.lookForAffixesInList(SUF, this.affix[SUF], w, dic)
 		TRACE(3, "--- Checkin PREF ---", MOD_AFFIX)
@@ -352,7 +352,7 @@ func (this *Affixes) ApplyRule(r string, la *list.List, aff string, suf *sufrule
 
 			var rtk *list.List
 
-			this.CheckRetokenizable(suf, r, lem, tag, dic, rtk, Capitalization(wd.GetForm()))
+			this.CheckRetokenizable(suf, r, lem, tag, dic, rtk, Capitalization(wd.getForm()))
 
 			var p *list.Element
 			for p = wd.Front(); p != nil && !(p.Value.(*Analysis).getLemma() == lem && p.Value.(*Analysis).getTag() == tag); p = p.Next() {
@@ -412,7 +412,7 @@ func (this *Affixes) CheckRetokenizable(suf *sufrule, form string, lem string, t
 				}
 
 				rtk.PushBack(w)
-				TRACE(3, "    word "+w.GetForm()+" ("+w.getLemma(0)+","+w.getTag(0)+") added to decomposition list", MOD_AFFIX)
+				TRACE(3, "    word "+w.getForm()+" ("+w.getLemma(0)+","+w.getTag(0)+") added to decomposition list", MOD_AFFIX)
 				first = false
 			}
 		}
