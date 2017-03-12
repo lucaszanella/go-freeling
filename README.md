@@ -4,6 +4,8 @@
 
 This is a partial port of Freeling 3.1 (http://nlp.lsi.upc.edu/freeling/).
 
+This is a continuation of the work from https://github.com/advancedlogic/go-freeling, where I'm adding support for all languages.
+
 License is GPL to respect the License model of Freeling.
 
 This is the list of features already implemented:
@@ -25,19 +27,8 @@ This is the list of features already implemented:
 
 **How to use it**:
 
-go build gofreeling.go
+The port where I got this from was using a web based processing example, I'm gonna write a simple parser for a sentence soon.
 
-./gofreeling
-
-(http server listens on default port 9999 - port can be changed in conf/gofreeling.toml file)
-
-To process a page:
-
-HTTP GET: *http://localhost:9999/analyzer?url=COPY HERE AN URL*
-
-Response is a self-explaining json
-
--
 TODO:
 * clean code
 * add comments
@@ -45,6 +36,13 @@ TODO:
 * implement WordNet-based sense annotation and disambiguation
 
 -
-**Linguistic Data** to run the server can be download here (English only):
+**Linguistic Data** to run the server can be download here:
 
-https://www.dropbox.com/s/fwwvfxp2s7dydet/data.zip
+https://github.com/TALP-UPC/FreeLing/tree/master/data
+
+You can download just the ones you need, and put them inside /data like this:
+
+/data/en
+
+/data/pt
+
