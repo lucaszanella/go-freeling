@@ -3,9 +3,10 @@ package nlp
 import (
 	"container/list"
 	set "gopkg.in/fatih/set.v0"
-	"io/ioutil"
+	//"io/ioutil"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 const (
@@ -62,75 +63,77 @@ func NewLocutions(locFile string) *Locutions {
 		prefixes: set.New(),
 	}
 
-	/*
+	
 		cfg := NewConfigFile(false, "##")
 		cfg.AddSection("TagSetFile", LOCUTIONS_TAGSET)
 		cfg.AddSection("Multiwords", LOCUTIONS_MULTIWORDS)
 		cfg.AddSection("OnlySelected", LOCUTIONS_ONLYSELECTED)
-	*/
+	
+	/*
 	filestr, err := ioutil.ReadFile(locFile)
 	if err != nil {
 		LOG.Panic("Error opening file " + locFile)
 	}
 	lines := strings.Split(string(filestr), "\n")
-
+	*/
+	/*
 	for _, line := range lines {
 		this.addLocution(line)
 	}
+	*/
+	
+	if !cfg.Open(locFile) {
+		CRASH("Error opening file " + locFile, MOD_LOCUTIONS)
+	}
 
-	/*
-		if !cfg.Open(locFile) {
-			CRASH("Error opening file " + locFile, MOD_LOCUTIONS)
-		}
-
-		line := ""
-		for cfg.GetContentLine(&line) {
-			switch cfg.GetSection() {
-				case LOCUTIONS_MULTIWORDS: {
-					this.addLocution(line)
-					break
-				}
-				case LOCUTIONS_TAGSET: {
-					path := locFile[0:strings.LastIndex(locFile, "/")]
-					this.Tags = NewTagset(path + "/" + strings.Replace(line, "./", "", -1))
-					break
-				}
-				case LOCUTIONS_ONLYSELECTED: {
-					this.onlySelected = (line == "yes" || line == "true")
-					break
-				}
-			default:
+	line := ""
+	for cfg.GetContentLine(&line) {
+		switch cfg.GetSection() {
+			case LOCUTIONS_MULTIWORDS: {
+				this.addLocution(line)
 				break
 			}
+			case LOCUTIONS_TAGSET: {
+				path := locFile[0:strings.LastIndex(locFile, "/")]
+				this.Tags = NewTagset(path + "/" + strings.Replace(line, "./", "", -1))
+				break
+			}
+			case LOCUTIONS_ONLYSELECTED: {
+				this.onlySelected = (line == "yes" || line == "true")
+				break
+			}
+		default:
+			break
 		}
-	*/
-
-	this.initialState = LOCUTIONS_ST_P
-	this.stopState = LOCUTIONS_ST_STOP
-	if this.final == nil {
-		this.final = set.New()
 	}
-	this.final.Add(LOCUTIONS_ST_M)
+	
+
+	this.InitialState = LOCUTIONS_ST_P
+	this.StopState = LOCUTIONS_ST_STOP
+	if this.Final == nil {
+		this.Final = set.New()
+	}
+	this.Final.Add(LOCUTIONS_ST_M)
 	var s, t int
 	for s = 0; s < AUTOMAT_MAX_STATES; s++ {
 		for t = 0; t < AUTOMAT_MAX_TOKENS; t++ {
-			this.trans[s][t] = LOCUTIONS_ST_STOP
+			this.Trans[s][t] = LOCUTIONS_ST_STOP
 		}
 	}
 
-	this.trans[LOCUTIONS_ST_P][LOCUTIONS_TK_pref] = LOCUTIONS_ST_P
-	this.trans[LOCUTIONS_ST_P][LOCUTIONS_TK_prefL] = LOCUTIONS_ST_P
-	this.trans[LOCUTIONS_ST_P][LOCUTIONS_TK_prefP] = LOCUTIONS_ST_P
-	this.trans[LOCUTIONS_ST_P][LOCUTIONS_TK_mw] = LOCUTIONS_ST_M
-	this.trans[LOCUTIONS_ST_P][LOCUTIONS_TK_mwL] = LOCUTIONS_ST_M
-	this.trans[LOCUTIONS_ST_P][LOCUTIONS_TK_mwP] = LOCUTIONS_ST_M
+	this.Trans[LOCUTIONS_ST_P][LOCUTIONS_TK_pref] = LOCUTIONS_ST_P
+	this.Trans[LOCUTIONS_ST_P][LOCUTIONS_TK_prefL] = LOCUTIONS_ST_P
+	this.Trans[LOCUTIONS_ST_P][LOCUTIONS_TK_prefP] = LOCUTIONS_ST_P
+	this.Trans[LOCUTIONS_ST_P][LOCUTIONS_TK_mw] = LOCUTIONS_ST_M
+	this.Trans[LOCUTIONS_ST_P][LOCUTIONS_TK_mwL] = LOCUTIONS_ST_M
+	this.Trans[LOCUTIONS_ST_P][LOCUTIONS_TK_mwP] = LOCUTIONS_ST_M
 
-	this.trans[LOCUTIONS_ST_M][LOCUTIONS_TK_pref] = LOCUTIONS_ST_P
-	this.trans[LOCUTIONS_ST_M][LOCUTIONS_TK_prefL] = LOCUTIONS_ST_P
-	this.trans[LOCUTIONS_ST_M][LOCUTIONS_TK_prefP] = LOCUTIONS_ST_P
-	this.trans[LOCUTIONS_ST_M][LOCUTIONS_TK_mw] = LOCUTIONS_ST_M
-	this.trans[LOCUTIONS_ST_M][LOCUTIONS_TK_mwL] = LOCUTIONS_ST_M
-	this.trans[LOCUTIONS_ST_M][LOCUTIONS_TK_mwP] = LOCUTIONS_ST_M
+	this.Trans[LOCUTIONS_ST_M][LOCUTIONS_TK_pref] = LOCUTIONS_ST_P
+	this.Trans[LOCUTIONS_ST_M][LOCUTIONS_TK_prefL] = LOCUTIONS_ST_P
+	this.Trans[LOCUTIONS_ST_M][LOCUTIONS_TK_prefP] = LOCUTIONS_ST_P
+	this.Trans[LOCUTIONS_ST_M][LOCUTIONS_TK_mw] = LOCUTIONS_ST_M
+	this.Trans[LOCUTIONS_ST_M][LOCUTIONS_TK_mwL] = LOCUTIONS_ST_M
+	this.Trans[LOCUTIONS_ST_M][LOCUTIONS_TK_mwP] = LOCUTIONS_ST_M
 
 	LOG.Trace("analyzer succesfully created")
 
@@ -140,7 +143,7 @@ func NewLocutions(locFile string) *Locutions {
 func (this *Locutions) BuildMultiword(se *Sentence, start *list.Element, end *list.Element, fs int, built *bool, st *LocutionStatus) *list.Element {
 	mw := list.New()
 	var form string
-	for i := 0; i < st.shiftBegin && start != nil; i++ {
+	for i := 0; i < st.ShiftBegin && start != nil; i++ {
 		start = start.Next()
 	}
 	var i *list.Element
@@ -181,6 +184,7 @@ func (this *Locutions) addLocution(line string) {
 	if line == "" {
 		return
 	}
+	fmt.Println("Adding " + line)
 	var prefix, key, lemma, tag string
 	var p int
 	items := Split(line, " ")
@@ -430,22 +434,22 @@ func (this *Locutions) matching(se *Sentence, i *list.Element) bool {
 	pst := NewLocutionStatus()
 	se.setProcessingStatus(pst)
 
-	state = this.initialState
+	state = this.InitialState
 	fstate = 0
 	this.ResetActions(pst)
 
-	pst.shiftBegin = 0
+	pst.ShiftBegin = 0
 
 	sMatch = i
 	eMatch = nil
-	for j = i; state != this.stopState && j != nil; j = j.Next() {
+	for j = i; state != this.StopState && j != nil; j = j.Next() {
 		token = this.ComputeToken(state, j, se)
-		newstate = this.trans[state][token]
+		newstate = this.Trans[state][token]
 
 		//this.StateActions(state, newstate, token,j ,pst)
 
 		state = newstate
-		if this.final.Has(state) {
+		if this.Final.Has(state) {
 			eMatch = j
 			fstate = state
 			LOG.Trace("New candidate found")

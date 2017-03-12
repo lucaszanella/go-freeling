@@ -7,13 +7,15 @@ import (
 
 	"github.com/cheggaaa/pb"
 
-	"github.com/advancedlogic/go-freeling/nlp"
-	. "github.com/advancedlogic/go-freeling/terminal"
+	"github.com/lucaszanella/go-freeling/nlp"
+	. "github.com/lucaszanella/go-freeling/terminal"
 )
 
 type Engine struct {
 	semaphore *sync.Mutex
 	NLP       *nlp.NLPEngine
+	Lang      string
+	Path      string
 	Ready     bool
 }
 
@@ -21,11 +23,18 @@ func NewEngine() *Engine {
 	return &Engine{
 		semaphore: new(sync.Mutex),
 		Ready:     false,
+		Lang:      "en",
+		Path:      "./",
 	}
 }
 
-var path = "./"
-var lang = "en"
+func (e *Engine) SetLanguage(lang string) {
+	e.Lang = lang
+}
+
+func (e *Engine) SetPath(path string) {
+	e.Path = path
+}
 
 func (e *Engine) InitNLP() {
 	e.semaphore.Lock()
@@ -47,7 +56,7 @@ func (e *Engine) InitNLP() {
 	}
 
 	start := time.Now().UnixNano()
-	nlpOptions := nlp.NewNLPOptions(path+"data/", lang, inc)
+	nlpOptions := nlp.NewNLPOptions(e.Path+"data", e.Lang, inc)
 	nlpOptions.Severity = nlp.ERROR
 	nlpOptions.TokenizerFile = "tokenizer.dat"
 	nlpOptions.SplitterFile = "splitter.dat"
@@ -57,8 +66,12 @@ func (e *Engine) InitNLP() {
 	nlpOptions.UKBFile = "" //"ukb.dat"
 	nlpOptions.DisambiguatorFile = "common/knowledge.dat"
 
-	macoOptions := nlp.NewMacoOptions(lang)
-	macoOptions.SetDataFiles("", path+"data/common/punct.dat", path+"data/"+lang+"/dicc.src", "", "", path+"data/"+lang+"/locucions-extended.dat", path+"data/"+lang+"/np.dat", "", path+"data/"+lang+"/probabilitats.dat")
+	macoOptions := nlp.NewMacoOptions(e.Lang)
+	macoOptions.SetDataFiles("", e.Path+"data/common/punct.dat", 
+							 e.Path+"data/"+e.Lang+"/dicc.src", 
+							 "", "", e.Path+"data/"+e.Lang+"/locucions.dat", 
+							 e.Path+"data/"+e.Lang+"/np.dat", "", 
+							 e.Path+"data/"+e.Lang+"/probabilitats.dat")
 
 	nlpOptions.MorfoOptions = macoOptions
 

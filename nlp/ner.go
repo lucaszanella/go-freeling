@@ -262,7 +262,7 @@ func NewNP(npFile string) *NP {
 		REDateNumPunct: regexp.MustCompile(NP_RE_DNP),
 	}
 	this.NERModule = NewNERModule(npFile)
-	this.final = set.New()
+	this.Final = set.New()
 
 	cfg := NewConfigFile(false, "##")
 	cfg.AddSection("Type", NP_NER_TYPE)
@@ -357,34 +357,34 @@ func NewNP(npFile string) *NP {
 		}
 	}
 
-	this.initialState = NP_ST_IN
-	this.stopState = NP_ST_STOP
-	this.final.Add(NP_ST_NP)
-	this.final.Add(NP_ST_SUF)
+	this.InitialState = NP_ST_IN
+	this.StopState = NP_ST_STOP
+	this.Final.Add(NP_ST_NP)
+	this.Final.Add(NP_ST_SUF)
 
 	var s, t int
 	for s = 0; s < AUTOMAT_MAX_STATES; s++ {
 		for t = 0; t < AUTOMAT_MAX_TOKENS; t++ {
-			this.trans[s][t] = NP_ST_STOP
+			this.Trans[s][t] = NP_ST_STOP
 		}
 	}
 
-	this.trans[NP_ST_IN][NP_TK_sUnkUpp] = NP_ST_NP
-	this.trans[NP_ST_IN][NP_TK_sNounUpp] = NP_ST_NP
-	this.trans[NP_ST_IN][NP_TK_mUpper] = NP_ST_NP
-	this.trans[NP_ST_IN][NP_TK_mPref] = NP_ST_PREF
+	this.Trans[NP_ST_IN][NP_TK_sUnkUpp] = NP_ST_NP
+	this.Trans[NP_ST_IN][NP_TK_sNounUpp] = NP_ST_NP
+	this.Trans[NP_ST_IN][NP_TK_mUpper] = NP_ST_NP
+	this.Trans[NP_ST_IN][NP_TK_mPref] = NP_ST_PREF
 
-	this.trans[NP_ST_PREF][NP_TK_mPref] = NP_ST_PREF
-	this.trans[NP_ST_PREF][NP_TK_mUpper] = NP_ST_NP
+	this.Trans[NP_ST_PREF][NP_TK_mPref] = NP_ST_PREF
+	this.Trans[NP_ST_PREF][NP_TK_mUpper] = NP_ST_NP
 
-	this.trans[NP_ST_NP][NP_TK_mUpper] = NP_ST_NP
-	this.trans[NP_ST_NP][NP_TK_mFun] = NP_ST_FUN
-	this.trans[NP_ST_NP][NP_TK_mSuf] = NP_ST_SUF
+	this.Trans[NP_ST_NP][NP_TK_mUpper] = NP_ST_NP
+	this.Trans[NP_ST_NP][NP_TK_mFun] = NP_ST_FUN
+	this.Trans[NP_ST_NP][NP_TK_mSuf] = NP_ST_SUF
 
-	this.trans[NP_ST_FUN][NP_TK_mUpper] = NP_ST_NP
-	this.trans[NP_ST_FUN][NP_TK_mFun] = NP_ST_FUN
+	this.Trans[NP_ST_FUN][NP_TK_mUpper] = NP_ST_NP
+	this.Trans[NP_ST_FUN][NP_TK_mFun] = NP_ST_FUN
 
-	this.trans[NP_ST_SUF][NP_TK_mSuf] = NP_ST_SUF
+	this.Trans[NP_ST_SUF][NP_TK_mSuf] = NP_ST_SUF
 
 	LOG.Trace("analyzer succesfully created")
 
@@ -507,22 +507,22 @@ func (this *NP) matching(se *Sentence, i *list.Element) bool {
 
 	pst := NewNERStatus()
 	se.setProcessingStatus(pst)
-	state = this.initialState
+	state = this.InitialState
 	fstate = 0
 	this.ResetActions(pst)
 
-	pst.shiftBegin = 0
+	pst.ShiftBegin = 0
 
 	sMatch = i
 	eMatch = nil
-	for j = i; state != this.stopState && j != nil; j = j.Next() {
+	for j = i; state != this.StopState && j != nil; j = j.Next() {
 		token = this.ComputeToken(state, j, se)
-		newstate = this.trans[state][token]
+		newstate = this.Trans[state][token]
 
 		this.StateActions(state, newstate, token, j, pst)
 
 		state = newstate
-		if this.final.Has(state) {
+		if this.Final.Has(state) {
 			eMatch = j
 			fstate = state
 			LOG.Trace("New candidate found")

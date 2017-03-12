@@ -7,9 +7,11 @@ type Context struct {
 
 func NewContext(configFile string) *Context {
 	instance := &Context{}
-	config := NewConfiguration(configFile)
+	if configFile!= "" {
+		config := NewConfiguration(configFile)
 
-	instance.Configuration = config
+		instance.Configuration = config
+	}
 	instance.Engine = NewEngine()
 	return instance
 }

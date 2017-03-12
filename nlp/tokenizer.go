@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	//"fmt"
 )
 
 const (
@@ -41,7 +42,10 @@ func NewTokenizer(tokenizerFile string) *Tokenizer {
 	var ci string
 	line := ""
 	for cfg.GetContentLine(&line) {
+		//fmt.Println(line)
 		items := Split(line, " ")
+		//fmt.Println(items[0])
+		//fmt.Println(items[1])
 		switch cfg.GetSection() {
 		case TOKENIZER_MACROS:
 			{
@@ -50,6 +54,7 @@ func NewTokenizer(tokenizerFile string) *Tokenizer {
 				}
 				mname := items[0]
 				mvalue := items[1]
+
 				macros.PushBack(Pair{mname, mvalue})
 				LOG.Trace("Read macro " + mname + ": " + mvalue)
 				break
@@ -59,6 +64,11 @@ func NewTokenizer(tokenizerFile string) *Tokenizer {
 				var substr int
 				comm := items[0]
 				substr, _ = strconv.Atoi(items[1])
+				/*
+					At the /pt tokenizer, there's the line:
+					NAMES_CODES	0  ({ALPHA}|{SYMNUM})*[0-9]({ALPHA}|[0-9]|{SYMNUM}+{ALPHANUM})*
+					which is not separated by space, it's a tab instead
+				*/
 				re := items[2]
 				rul = true
 

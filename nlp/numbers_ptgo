@@ -1,0 +1,360 @@
+package nlp
+
+import (
+	"container/list"
+	set "gopkg.in/fatih/set.v0"
+    "fmt"
+	//"io/ioutil"
+	//"strconv"
+	//"strings"
+	//"fmt"
+)
+
+const (
+    N_ST_B1 = 1 + iota // initial state
+    N_ST_B2 // got hundreds "doscientos"  (VALID NUMBER)
+    N_ST_B3 // got tens "treinta" "docientos treinta"   (VALID NUMBER)
+    N_ST_B4 // got "y" after tens
+    N_ST_Bu // got units after "y": "doscientos treinta y cuatro"   (VALID NUMBER)
+    N_ST_B5 // got "mil" after unit "doscientos treinta y cuatro mil"   (VALID NUMBER)
+    N_ST_B6 // got hundreds after "mil"   (VALID NUMBER)
+    N_ST_B7 // got tens after "mil"   (VALID NUMBER)
+    N_ST_B8 // got "y" after tens   (VALID NUMBER)
+    N_ST_Bk // got units after "y"   (VALID NUMBER)
+    N_ST_M1 // got "billones" after a valid number  (VALID NUMBER)
+    N_ST_M1a // got "y" after "billones"
+    N_ST_M1b // got "... millones y medio/cuarto" 
+    N_ST_M2 // got hundreds "doscientos" after billions  (VALID NUMBER)
+    N_ST_M3 // got tens "treinta" "docientos treinta"   (VALID NUMBER)
+    N_ST_M4 // got "y" after tens
+    N_ST_Mu // got units after "y": "doscientos treinta y cuatro"   (VALID NUMBER)
+    N_ST_M5 // got "mil" after unit "doscientos treinta y cuatro mil"   (VALID NUMBER)
+    N_ST_M6 // got hundreds after "mil"   (VALID NUMBER)
+    N_ST_M7 // got tens after "mil"   (VALID NUMBER)
+    N_ST_M8 // got "y" after tens   (VALID NUMBER)
+    N_ST_Mk // got units after "y"   (VALID NUMBER)
+    N_ST_S1 // got "millones" after a valid number  (VALID NUMBER) 
+    N_ST_S1a // got "y" after "millones"
+    N_ST_S1b // got "... millones y medio/cuarto" 
+    N_ST_S2 // got hundreds "doscientos" after millions  (VALID NUMBER)
+    N_ST_S3 // got tens "treinta" "docientos treinta"   (VALID NUMBER)
+    N_ST_S4 // got "y" after tens
+    N_ST_Su // got units after "y": "doscientos treinta y cuatro"   (VALID NUMBER)
+    N_ST_S5 // got "mil" after unit "doscientos treinta y cuatro mil"   (VALID NUMBER)
+    N_ST_S6 // got hundreds after "mil"   (VALID NUMBER)
+    N_ST_S7 // got tens after "mil"   (VALID NUMBER)
+    N_ST_S8 // got "y" after tens   (VALID NUMBER)
+    N_ST_Sk // got units after "y"   (VALID NUMBER)
+    N_ST_COD // got pseudo-numerical code from initial state
+    N_ST_X1 // got "millar", "docenas" "centenares" "decenas" after a number
+    N_ST_X2 // got "y" after "millar/docenas/etc"
+    N_ST_X3 // got "millar y medio/cuarto",  "X docenas y media"
+    N_ST_X4 // got "medio" as 1st word
+    N_ST_X5 // got "medio centenar/millar/etc"
+    N_ST_B2b // 
+    N_ST_B4b // 
+    N_ST_Bu2 // 
+    N_ST_STOP
+)
+
+const (
+    N_TK_c = 1 + iota // hundreds "cien" "doscientos" 
+    N_TK_d // tens "treinta" "cuarenta"
+    N_TK_u // units "tres" "cuatro"
+    N_TK_wy // word "y"
+    N_TK_wmedio // word "medio"
+    N_TK_wcuarto // word "cuarto"
+    N_TK_mil // word "mil"   
+    N_TK_mill // word "millon" "millones"
+    N_TK_bill // word "billon" "billones"
+    N_TK_num // a number (in digits)
+    N_TK_code // a code (ex. LX-345-2)
+    N_TK_milr // word "millar/es"
+    N_TK_cent // word "centenar/es"
+    N_TK_dec // word "decena/s"
+    N_TK_doc // word "docena/s
+    N_TK_other // 
+    N_TK_du // tens and units: "dez" - "cento e dez" (vs. vinte e dez)
+)
+
+type NumbersPT struct {
+	Automat
+    Status *NumbersStatus
+    value map[string]float64
+    tok map[string]int
+    power map[int]int64
+}
+
+func NewNumbersPT(locFile string) *NumbersPT {
+	this := NumbersPT{
+        Status: NewNumbersStatus(),
+	}
+
+    this.value["cem"] = 100.0;          this.value["cento"] = 100.0;
+    this.value["duzentos"] = 200.0;    this.value["duzentas"] = 200.0;
+    this.value["trezentos"] = 300.0;   this.value["trezentas"] = 300.0;
+    this.value["quatrocentos"] = 400.0; this.value["quatrocentas"] = 400.0;
+    this.value["quinhentos"] = 500.0;    this.value["quinhentas"] = 500.0;
+    this.value["seiscentos"] = 600.0;   this.value["seiscentas"] = 600.0;
+    this.value["setecentos"] = 700.0;   this.value["setecentas"] = 700.0;
+    this.value["oitocentos"] = 800.0;   this.value["oitocentas"] = 800.0;
+    this.value["novecentos"] = 900.0;   this.value["novecentas"] = 900.0;
+    this.value["trinta"] = 30.0;     this.value["quarenta"] = 40.0;
+    this.value["cinquenta"] = 50.0;   this.value["sessenta"] = 60.0;
+    this.value["setenta"] = 70.0;     this.value["oitenta"] = 80.0;
+    this.value["noventa"] = 90.0;     this.value["cinqüenta"] = 50.0;
+    this.value["um"] = 1.0;           this.value["uma"] = 1.0;
+    this.value["dois"] = 2.0;    this.value["duas"] = 2.0;
+    this.value["três"] = 3.0;    this.value["quatro"] = 4.0;
+    this.value["cinco"] = 5.0;   this.value["seis"] = 6.0;
+    this.value["sete"] = 7.0;   this.value["oito"] = 8.0;
+    this.value["nove"] = 9.0;   this.value["dez"] = 10.0;
+    this.value["onze"] = 11.0;   this.value["doze"] = 12.0;
+    this.value["treze"] = 13.0;  this.value["quatorze"] = 14.0;
+    this.value["quinze"] = 15.0; this.value["dezasseis"] = 16.0;
+    this.value["dezassete"] = 17.0; this.value["catorze"] = 14.0;
+    this.value["dezoito"] = 18.0; this.value["dezanove"] = 19.0;
+    this.value["vinte"] = 20.0;    this.value["dous"] = 2.0;
+    this.value["meio"] = 0.5;    this.value["meia"] = 0.5;  
+    this.value["quarto"] = 0.25;
+
+    // Initializing this.token map
+    this.tok["cem"] = N_TK_c;        this.tok["cento"] = N_TK_c;
+    this.tok["duzentos"] = N_TK_c;  this.tok["duzentas"] = N_TK_c;
+    this.tok["trezentos"] = N_TK_c; this.tok["trezentas"] = N_TK_c;
+    this.tok["quatrocentos"] = N_TK_c; this.tok["quatrocentas"] = N_TK_c;
+    this.tok["quinhentos"] = N_TK_c;  this.tok["quinhentas"] = N_TK_c;
+    this.tok["seiscentos"] = N_TK_c; this.tok["seiscentas"] = N_TK_c;
+    this.tok["setecentos"] = N_TK_c; this.tok["setecentas"] = N_TK_c;
+    this.tok["oitocentos"] = N_TK_c; this.tok["oitocentas"] = N_TK_c;
+    this.tok["novecentos"] = N_TK_c; this.tok["novecentas"] = N_TK_c;
+    this.tok["trinta"] = N_TK_d;     this.tok["quarenta"] = N_TK_d;
+    this.tok["cinquenta"] = N_TK_d;   this.tok["sessenta"] = N_TK_d;
+    this.tok["setenta"] = N_TK_d;     this.tok["oitenta"] = N_TK_d;
+    this.tok["noventa"] = N_TK_d;  this.tok["vinte"] = N_TK_d;
+    this.tok["um"] = N_TK_u;       this.tok["uma"] = N_TK_u;
+    this.tok["dois"] = N_TK_u;      this.tok["duas"] = N_TK_u;      
+    this.tok["três"] = N_TK_u;     this.tok["cinqüenta"] = N_TK_d;
+    this.tok["quatro"] = N_TK_u;   this.tok["cinco"] = N_TK_u;
+    this.tok["seis"] = N_TK_u;     this.tok["sete"] = N_TK_u;
+    this.tok["oito"] = N_TK_u;     this.tok["nove"] = N_TK_u;
+    //  this.tok["dez"] = N_TK_u;     this.tok["onze"] = N_TK_u;
+    //  this.tok["doze"] = N_TK_u;     this.tok["treze"] = N_TK_u;
+    //  this.tok["catorze"] = N_TK_u;  this.tok["quinze"] = N_TK_u;
+    //  this.tok["dezasseis"] = N_TK_u;
+    //  this.tok["dezassete"] = N_TK_u; this.tok["dezoito"] = N_TK_u;
+    //  this.tok["dezanove"] = N_TK_u; this.tok["vinte"] = N_TK_u;
+    this.tok["dez"] = N_TK_du;     this.tok["onze"] = N_TK_du;
+    this.tok["doze"] = N_TK_du;     this.tok["treze"] = N_TK_du;
+    this.tok["catorze"] = N_TK_du;  this.tok["quinze"] = N_TK_du;
+    this.tok["dezasseis"] = N_TK_du;
+    this.tok["dezassete"] = N_TK_du; this.tok["dezoito"] = N_TK_du;
+    this.tok["dezanove"] = N_TK_du; this.tok["vinte"] = N_TK_du;
+    //
+    this.tok["mil"] = N_TK_mil;
+    this.tok["milhão"] = N_TK_mill; this.tok["milhões"] = N_TK_mill;
+    this.tok["bilhão"] = N_TK_bill;    this.tok["bilhões"] = N_TK_bill;
+    this.tok["bilião"] = N_TK_bill;    this.tok["biliões"] = N_TK_bill;
+
+    this.tok["milhar"] = N_TK_milr;    this.tok["milhares"] = N_TK_milr;
+    this.tok["milheiro"] = N_TK_milr;    this.tok["milheiros"] = N_TK_milr;
+    this.tok["centenar"] = N_TK_cent;    this.tok["centenares"] = N_TK_cent;
+    this.tok["dezena"] = N_TK_dec;    this.tok["dezenas"] = N_TK_dec;
+    this.tok["dúzia"] = N_TK_doc;    this.tok["dúzias"] = N_TK_doc;
+
+    this.tok["e"] = N_TK_wy;
+    this.tok["meio"] = N_TK_wmedio;
+    this.tok["meia"] = N_TK_wmedio;
+    this.tok["quarto"] = N_TK_wcuarto;
+
+    // Initializing this.power map
+    this.power[N_TK_mil] =   1000.0;
+    this.power[N_TK_mill] =  1000000.0;
+    this.power[N_TK_bill] =  1000000000000.0;
+    this.power[N_TK_milr] =  1000.0;
+    this.power[N_TK_cent] =  100.0;
+    this.power[N_TK_doc] =   12.0;
+    this.power[N_TK_dec] =   10.0;
+
+	this.initialState = N_ST_B1
+	this.stopState = N_ST_STOP
+
+    if this.final == nil {
+		this.final = set.New()
+	}
+
+    // Initialize this.final state set 
+    this.final.Add(N_ST_B2);  this.final.Add(N_ST_B3);  this.final.Add(N_ST_Bu);  this.final.Add(N_ST_B5);
+    this.final.Add(N_ST_B6);  this.final.Add(N_ST_B7);  this.final.Add(N_ST_Bk); 
+    this.final.Add(N_ST_M1);  this.final.Add(N_ST_M2);  this.final.Add(N_ST_M3);  this.final.Add(N_ST_Mu);
+    this.final.Add(N_ST_M5);  this.final.Add(N_ST_M6);  this.final.Add(N_ST_M7);  this.final.Add(N_ST_Mk);
+    this.final.Add(N_ST_S1);  this.final.Add(N_ST_S2);  this.final.Add(N_ST_S3);  this.final.Add(N_ST_Su);
+    this.final.Add(N_ST_S5);  this.final.Add(N_ST_S6);  this.final.Add(N_ST_S7);  this.final.Add(N_ST_Sk);
+    this.final.Add(N_ST_M1b); this.final.Add(N_ST_S1b); this.final.Add(N_ST_COD);  
+    this.final.Add(N_ST_X1);  this.final.Add(N_ST_X3);  this.final.Add(N_ST_X5);
+	
+
+	//this.this.final.Add(N_ST_M)
+	var s, t int
+	for s = 0; s < AUTOMAT_MAX_STATES; s++ {
+		for t = 0; t < AUTOMAT_MAX_TOKENS; t++ {
+			this.trans[s][t] = N_ST_STOP
+		}
+	}
+    // Initializing transitions table
+    // State B1
+    this.trans[N_ST_B1][N_TK_c]=N_ST_B2;   this.trans[N_ST_B1][N_TK_d]=N_ST_B3;   this.trans[N_ST_B1][N_TK_u]=N_ST_Bu;
+    this.trans[N_ST_B1][N_TK_mil]=N_ST_B5; this.trans[N_ST_B1][N_TK_num]=N_ST_Bu; this.trans[N_ST_B1][N_TK_code]=N_ST_COD;
+    this.trans[N_ST_B1][N_TK_wmedio]=N_ST_X4; this.trans[N_ST_B1][N_TK_du]=N_ST_Bu;
+    // State B2
+    this.trans[N_ST_B2][N_TK_wy]=N_ST_B4;
+    this.trans[N_ST_B2][N_TK_mil]=N_ST_B5;
+    this.trans[N_ST_B2][N_TK_bill]=N_ST_M1; this.trans[N_ST_B2][N_TK_mill]=N_ST_S1;
+    // State B2b
+    this.trans[N_ST_B2b][N_TK_u]=N_ST_Bu; this.trans[N_ST_B2b][N_TK_num]=N_ST_Bu;
+    // State B3
+    this.trans[N_ST_B3][N_TK_wy]=N_ST_B2b;   this.trans[N_ST_B3][N_TK_mil]=N_ST_B5; 
+    this.trans[N_ST_B3][N_TK_bill]=N_ST_M1; this.trans[N_ST_B3][N_TK_mill]=N_ST_S1;
+    // State B4
+    this.trans[N_ST_B4][N_TK_u]=N_ST_Bu; this.trans[N_ST_B4][N_TK_num]=N_ST_Bu;
+    this.trans[N_ST_B4][N_TK_du]=N_ST_Bu;
+    this.trans[N_ST_B4][N_TK_d]=N_ST_B3;
+    // State B4b
+    this.trans[N_ST_B4b][N_TK_u]=N_ST_Bu; this.trans[N_ST_B4b][N_TK_num]=N_ST_Bu;
+    this.trans[N_ST_B4b][N_TK_du]=N_ST_Bu;
+    this.trans[N_ST_B4b][N_TK_d]=N_ST_Bu; this.trans[N_ST_B4b][N_TK_c]=N_ST_Bu;
+    this.trans[N_ST_B4b][N_TK_d]=N_ST_B3;
+    // State Bu
+    this.trans[N_ST_Bu][N_TK_mil]=N_ST_B5; this.trans[N_ST_Bu][N_TK_bill]=N_ST_M1; this.trans[N_ST_Bu][N_TK_mill]=N_ST_S1;
+    this.trans[N_ST_Bu][N_TK_milr]=N_ST_X1; this.trans[N_ST_Bu][N_TK_cent]=N_ST_X1;
+    this.trans[N_ST_Bu][N_TK_dec]=N_ST_X1;  this.trans[N_ST_Bu][N_TK_doc]=N_ST_X1;
+    // State B5
+    this.trans[N_ST_B5][N_TK_wy]=N_ST_B4b;
+    this.trans[N_ST_B5][N_TK_c]=N_ST_B2;
+    this.trans[N_ST_B5][N_TK_bill]=N_ST_M1; this.trans[N_ST_B5][N_TK_mill]=N_ST_S1; this.trans[N_ST_B5][N_TK_num]=N_ST_Bk;
+    // State B6 ???
+    this.trans[N_ST_B6][N_TK_d]=N_ST_B7;    this.trans[N_ST_B6][N_TK_u]=N_ST_Bk;    this.trans[N_ST_B6][N_TK_num]=N_ST_Bk;
+    this.trans[N_ST_B6][N_TK_bill]=N_ST_M1; this.trans[N_ST_B6][N_TK_mill]=N_ST_S1;
+    // State B7 ???
+    this.trans[N_ST_B7][N_TK_wy]=N_ST_B8; this.trans[N_ST_B7][N_TK_bill]=N_ST_M1; this.trans[N_ST_B7][N_TK_mill]=N_ST_S1;
+    // State B8 ???
+    this.trans[N_ST_B8][N_TK_u]=N_ST_Bk;  this.trans[N_ST_B8][N_TK_num]=N_ST_Bk; 
+    // State Bk
+    this.trans[N_ST_Bk][N_TK_bill]=N_ST_M1; this.trans[N_ST_Bk][N_TK_mill]=N_ST_S1;
+
+    // State M1
+    this.trans[N_ST_M1][N_TK_c]=N_ST_M2; this.trans[N_ST_M1][N_TK_wy]=N_ST_S1a;
+    // State M1a
+    this.trans[N_ST_M1a][N_TK_wmedio]=N_ST_M1b; this.trans[N_ST_M1a][N_TK_wcuarto]=N_ST_M1b;
+    // State M1b
+    // nothing else expected
+    // State M2
+    this.trans[N_ST_M2][N_TK_wy]=N_ST_B4;
+    // State M3
+    this.trans[N_ST_M3][N_TK_wy]=N_ST_M4;   this.trans[N_ST_M3][N_TK_mil]=N_ST_M5;  this.trans[N_ST_M3][N_TK_mill]=N_ST_S1;
+    // State M4
+    this.trans[N_ST_M4][N_TK_u]=N_ST_Mu;  this.trans[N_ST_M4][N_TK_num]=N_ST_Mu;
+    // State Mu
+    this.trans[N_ST_Mu][N_TK_mil]=N_ST_M5; this.trans[N_ST_Mu][N_TK_mill]=N_ST_S1;
+    // State M5
+    this.trans[N_ST_M5][N_TK_c]=N_ST_M6;   this.trans[N_ST_M5][N_TK_d]=N_ST_M7;   this.trans[N_ST_M5][N_TK_num]=N_ST_Mk; 
+    this.trans[N_ST_M5][N_TK_u]=N_ST_Mk;   this.trans[N_ST_M5][N_TK_mill]=N_ST_S1;
+    // State M6
+    this.trans[N_ST_M6][N_TK_d]=N_ST_M7;    this.trans[N_ST_M6][N_TK_u]=N_ST_Mk;
+    this.trans[N_ST_M6][N_TK_mill]=N_ST_S1; this.trans[N_ST_M6][N_TK_num]=N_ST_Mk; 
+    // State M7
+    this.trans[N_ST_M7][N_TK_wy]=N_ST_M8; this.trans[N_ST_M7][N_TK_mill]=N_ST_S1;
+    // State M8
+    this.trans[N_ST_M8][N_TK_u]=N_ST_Mk;   this.trans[N_ST_M8][N_TK_num]=N_ST_Mk;
+    // State Mk
+    this.trans[N_ST_Mk][N_TK_mill]=N_ST_S1;
+
+    // State S1
+    this.trans[N_ST_S1][N_TK_c]=N_ST_S2;
+    this.trans[N_ST_S1][N_TK_wy]=N_ST_S1a;
+    // State S1a
+    this.trans[N_ST_S1a][N_TK_wmedio]=N_ST_S1b; this.trans[N_ST_S1a][N_TK_wcuarto]=N_ST_S1b;
+    // From B4b
+    this.trans[N_ST_S1a][N_TK_u]=N_ST_Bu; this.trans[N_ST_S1a][N_TK_num]=N_ST_Bu;
+    this.trans[N_ST_S1a][N_TK_du]=N_ST_Bu;
+    this.trans[N_ST_S1a][N_TK_d]=N_ST_Bu; this.trans[N_ST_S1a][N_TK_c]=N_ST_Bu;
+    this.trans[N_ST_S1a][N_TK_d]=N_ST_B3;
+    // State S1b
+    // nothing else expected
+    // State S2
+    this.trans[N_ST_S2][N_TK_wy]=N_ST_B4;
+    // State S3 ???
+    this.trans[N_ST_S3][N_TK_wy]=N_ST_S4; this.trans[N_ST_S3][N_TK_mil]=N_ST_S5;
+    // State S4 ???
+    this.trans[N_ST_S4][N_TK_u]=N_ST_Su;  this.trans[N_ST_S4][N_TK_num]=N_ST_Su;
+    // State Su ???
+    this.trans[N_ST_Su][N_TK_mil]=N_ST_S5;
+    // State S5 ???
+    this.trans[N_ST_S5][N_TK_c]=N_ST_S6; this.trans[N_ST_S5][N_TK_d]=N_ST_S7;
+    this.trans[N_ST_S5][N_TK_u]=N_ST_Sk; this.trans[N_ST_S5][N_TK_num]=N_ST_Sk; 
+    // State S6 ???
+    this.trans[N_ST_S6][N_TK_d]=N_ST_S7; this.trans[N_ST_S6][N_TK_u]=N_ST_Sk; this.trans[N_ST_S6][N_TK_num]=N_ST_Sk;  
+    // State S7 ???
+    this.trans[N_ST_S7][N_TK_wy]=N_ST_S8;
+    // State S8 ???
+    this.trans[N_ST_S8][N_TK_u]=N_ST_Sk; this.trans[N_ST_S8][N_TK_num]=N_ST_Sk; 
+    // State Sk
+    // nothing else is expected
+    // State COD
+    // nothing else is expected
+    // State X1
+    this.trans[N_ST_X1][N_TK_wy]=N_ST_X2;
+    // State X2
+    this.trans[N_ST_X2][N_TK_wmedio]=N_ST_X3;  this.trans[N_ST_X2][N_TK_wcuarto]=N_ST_X3;
+    // State X3
+    // nothing else is expected
+    // State X4
+    this.trans[N_ST_X4][N_TK_bill]=N_ST_M1;  this.trans[N_ST_X4][N_TK_mill]=N_ST_S1;   
+    this.trans[N_ST_X4][N_TK_milr]=N_ST_X5;  this.trans[N_ST_X4][N_TK_cent]=N_ST_X5;
+    this.trans[N_ST_X4][N_TK_dec]=N_ST_X5;   this.trans[N_ST_X4][N_TK_doc]=N_ST_X5;
+
+	//LOG.Trace("analyzer succesfully created")
+
+	return &this
+}
+
+func (this *NumbersPT) ComputeToken(state int, j *list.Element, se *Sentence) int {
+    form := j.Value
+    fmt.Println(form)
+    
+    //token := N_TK_other
+    //im := this.tok[form]
+    /*
+    if (im!=this.tok.end()) {
+      token = (*im).second;
+    }
+    */
+    /*
+    this.token = this.N_TK_other
+    im = this.tok.find(form);
+    if (im!=this.tok.end()) {
+      this.token = (*im).second;
+    }
+
+    //TRACE(3,L"Next word form is: ["+form+L"] this.token="+util::int2wstring(this.token));     
+    // if the this.token was in the table, we're done
+    if (this.token != N_TK_other) return (this.token);
+
+    // this.token not found in translation table, let's have a closer look.
+    // check to see if it is a number
+    if (RE_number.search(form)) this.token = N_TK_num;
+    else if (RE_code.search(form)) this.token = N_TK_code;
+
+    //TRACE(3,L"Leaving state "+util::int2wstring(state)+L" with this.token "+util::int2wstring(this.token)); 
+    return (this.token);
+    */
+    return 0
+}
+
+func (this *NumbersPT) StateActions(origin int, state int, token int, j *list.Element, st *NumbersStatus) {
+
+}
+
+func (this *NumbersPT) SetMultiwordAnalysis(i *list.Element, fstate int, st *NumbersStatus) {
+
+}

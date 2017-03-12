@@ -7,8 +7,7 @@ import (
 
 	"github.com/kdar/factorlog"
 	set "gopkg.in/fatih/set.v0"
-
-	"github.com/advancedlogic/go-freeling/models"
+	"github.com/lucaszanella/go-freeling/models"
 )
 
 var LOG *factorlog.FactorLog
@@ -66,14 +65,13 @@ type NLPEngine struct {
 	dsb           *UKB
 	disambiguator *Disambiguator
 	filter        *set.Set
-	mitie         *MITIE
+	//mitie         *MITIE
 }
 
 func NewNLPEngine(options *NLPOptions) *NLPEngine {
 	this := NLPEngine{
 		options: options,
 	}
-
 	LOG.SetMinMaxSeverity(factorlog.PANIC, options.Severity)
 
 	if options.TokenizerFile != "" {
@@ -121,7 +119,7 @@ func NewNLPEngine(options *NLPOptions) *NLPEngine {
 		this.options.Status()
 	}
 
-	this.mitie = NewMITIE(options.DataPath + "/" + options.Lang + "/mitie/ner_model.dat")
+	//this.mitie = NewMITIE(options.DataPath + "/" + options.Lang + "/mitie/ner_model.dat")
 	this.options.Status()
 	return &this
 }
@@ -210,13 +208,13 @@ func (this *NLPEngine) Workflow(document *models.DocumentEntity, output chan *mo
 	}
 
 	tempEntities := set.New()
-
+	/*
 	mitieEntities := this.mitie.Process(body)
 	for e := mitieEntities.Front(); e != nil; e = e.Next() {
 		entity := e.Value.(*models.Entity)
 		tempEntities.Add(entity.GetValue())
 	}
-
+	*/
 	for name, frequency := range entities {
 		name = strings.Replace(name, "_", " ", -1)
 		if !tempEntities.Has(name) {
@@ -224,7 +222,7 @@ func (this *NLPEngine) Workflow(document *models.DocumentEntity, output chan *mo
 		}
 	}
 
-	document.Entities = mitieEntities
+	//document.Entities = mitieEntities
 	output <- document
 }
 
