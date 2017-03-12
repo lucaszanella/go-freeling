@@ -202,14 +202,14 @@ func (this *Probability) AnnotateWord(w *Word) {
 	var sum float64
 	na := w.getNAnalysis()
 
-	TRACE(2, "--Assigning probabilities to: "+w.getForm(), MOD_PROBABILITY)
+	TRACE(2, "--Assigning probabilities to: "+w.GetForm(), MOD_PROBABILITY)
 
 	if na > 0 && (w.foundInDict() || strings.HasPrefix(w.getTag(0), "F") || strings.HasPrefix(w.getTag(0), "Z") || w.hasRetokenizable()) {
 		//TRACE(2, "Form with analysis. Found in dict (" + )
 		this.smoothing(w)
 		sum = 1
 	} else if this.activateGuesser {
-		TRACE(2, "Form with NO analysis. Guessing "+w.getForm(), MOD_PROBABILITY)
+		TRACE(2, "Form with NO analysis. Guessing "+w.GetForm(), MOD_PROBABILITY)
 		var mass float64 = 1.0
 		for li := w.Front(); li != nil; li = li.Next() {
 			li.Value.(*Analysis).setProb(mass / float64(w.getNAnalysis()))
@@ -315,7 +315,7 @@ func (this *Probability) smoothing(w *Word) {
 		p := make([]float64, w.Len())
 		i := 0
 		for li := w.Front(); li != nil; li = li.Next() {
-			p[i] = this.computeProbability(li.Value.(*Analysis).getTag(), li.Value.(*Analysis).getProb(), w.getForm())
+			p[i] = this.computeProbability(li.Value.(*Analysis).getTag(), li.Value.(*Analysis).getProb(), w.GetForm())
 			norm += p[i]
 			i++
 		}

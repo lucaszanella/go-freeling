@@ -26,7 +26,7 @@ func (this *Punts) analyze(se *Sentence) {
 	var i *list.Element
 
 	for i = se.Front(); i != nil; i = i.Next() {
-		form = i.Value.(*Word).getForm()
+		form = i.Value.(*Word).GetForm()
 		TRACE(3, "Checking form "+form, MOD_PUNTS)
 		data := this.accessDatabase(form)
 		if data != "" {

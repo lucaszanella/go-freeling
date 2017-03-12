@@ -193,11 +193,11 @@ func (this *NLPEngine) Workflow(document *models.DocumentEntity, output chan *mo
 		for ww := s.Front(); ww != nil; ww = ww.Next() {
 			w := ww.Value.(*Word)
 			a := w.Front().Value.(*Analysis)
-			te := models.NewTokenEntity(w.getForm(), a.getLemma(), a.getTag(), a.getProb())
+			te := models.NewTokenEntity(w.GetForm(), a.getLemma(), a.getTag(), a.getProb())
 			if a.getTag() == TAG_NP {
-				entities[w.getForm()]++
+				entities[w.GetForm()]++
 			}
-			body += w.getForm() + " "
+			body += w.GetForm() + " "
 			se.AddTokenEntity(te)
 		}
 		body = strings.Trim(body, " ")
@@ -230,7 +230,7 @@ func (this *NLPEngine) PrintList(document *models.DocumentEntity) {
 	ls := document.Sentences()
 	for l := ls.Front(); l != nil; l = l.Next() {
 		for w := l.Value.(*Sentence).Front(); w != nil; w = w.Next() {
-			item := w.Value.(*Word).getForm() + ":"
+			item := w.Value.(*Word).GetForm() + ":"
 			for a := w.Value.(*Word).Front(); a != nil; a = a.Next() {
 				if a.Value.(*Analysis).isSelected(0) {
 					item += a.Value.(*Analysis).getTag()

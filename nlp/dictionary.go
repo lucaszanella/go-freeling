@@ -388,9 +388,9 @@ func (this *Dictionary) CheckContracted(form string, lem string, tag string, lw 
 }
 
 func (this *Dictionary) AnnotateWord(w *Word, lw *list.List, override bool) bool {
-	LOG.Trace("Searching in dictionary for word " + w.getForm())
+	LOG.Trace("Searching in dictionary for word " + w.GetForm())
 	la := list.New()
-	this.SearchForm(w.getForm(), la)
+	this.SearchForm(w.GetForm(), la)
 	w.setFoundInDict(la.Len() > 0)
 	LOG.Trace("   Found " + strconv.Itoa(la.Len()) + " analysis.")
 	for a := la.Front(); a != nil; a = a.Next() {
@@ -434,7 +434,7 @@ func (this *Dictionary) AnnotateWord(w *Word, lw *list.List, override bool) bool
 
 		for a := w.Front(); a != nil; a = a.Next() {
 			lw = lw.Init()
-			if this.CheckContracted(w.getForm(), a.Value.(*Analysis).getLemma(), a.Value.(*Analysis).getTag(), lw) {
+			if this.CheckContracted(w.GetForm(), a.Value.(*Analysis).getLemma(), a.Value.(*Analysis).getTag(), lw) {
 				a.Value.(*Analysis).setRetokenizable(lw)
 			}
 		}
@@ -445,11 +445,11 @@ func (this *Dictionary) AnnotateWord(w *Word, lw *list.List, override bool) bool
 		}
 
 		if ca != nil && w.getNAnalysis() > 1 {
-			LOG.Warn("Contraction " + w.getForm() + " has several analysis in dictionary. All ignored except (" + ca.Value.(*Analysis).getLemma() + "," + ca.Value.(*Analysis).getTag() + "). Set RetokenizeContraction=false to keep all analysis.")
+			LOG.Warn("Contraction " + w.GetForm() + " has several analysis in dictionary. All ignored except (" + ca.Value.(*Analysis).getLemma() + "," + ca.Value.(*Analysis).getTag() + "). Set RetokenizeContraction=false to keep all analysis.")
 		} else {
 			ca = w.Front()
 		}
-		if ca != nil && this.CheckContracted(w.getForm(), ca.Value.(*Analysis).getLemma(), ca.Value.(*Analysis).getTag(), lw) {
+		if ca != nil && this.CheckContracted(w.GetForm(), ca.Value.(*Analysis).getLemma(), ca.Value.(*Analysis).getTag(), lw) {
 			contr = true
 		}
 	}
@@ -461,16 +461,16 @@ func (this *Dictionary) Analyze(se *Sentence) {
 	contr := false
 
 	for pos := se.Front(); pos != nil; pos = pos.Next() {
-		LOG.Tracef("Processing: %s - %d %s", pos.Value.(*Word).getForm(), pos.Value.(*Word).getNAnalysis(), string(pos.Value.(*Word).getTag(0)))
+		LOG.Tracef("Processing: %s - %d %s", pos.Value.(*Word).GetForm(), pos.Value.(*Word).getNAnalysis(), string(pos.Value.(*Word).getTag(0)))
 		if pos.Value.(*Word).getNAnalysis() == 0 || (pos.Value.(*Word).getNAnalysis() > 0 && string(pos.Value.(*Word).getTag(0)[0]) == "Z") {
-			LOG.Trace("Annotating word:" + pos.Value.(*Word).getForm())
+			LOG.Trace("Annotating word:" + pos.Value.(*Word).GetForm())
 
 			lw := list.New()
 
 			if this.AnnotateWord(pos.Value.(*Word), lw, false) {
 				st := pos.Value.(*Word).getSpanStart()
 				fin := pos.Value.(*Word).getSpanFinish()
-				LOG.Trace("Contraction found, replacing... " + pos.Value.(*Word).getForm() + ". span=(" + strconv.Itoa(int(st)) + "," + strconv.Itoa(int(fin)) + ")")
+				LOG.Trace("Contraction found, replacing... " + pos.Value.(*Word).GetForm() + ". span=(" + strconv.Itoa(int(st)) + "," + strconv.Itoa(int(fin)) + ")")
 
 				step := (float64(fin) - float64(st) + 1.0) / float64(lw.Len())
 				step = math.Max(1, step)
@@ -484,7 +484,7 @@ func (this *Dictionary) Analyze(se *Sentence) {
 					i.Value.(*Word).setSpan(st, f)
 					i.Value.(*Word).user = pos.Value.(*Word).user
 
-					LOG.Trace("   Inserting " + i.Value.(*Word).getForm() + ". span=(" + strconv.Itoa(int(st)) + "," + strconv.Itoa(int(fin)) + ")")
+					LOG.Trace("   Inserting " + i.Value.(*Word).GetForm() + ". span=(" + strconv.Itoa(int(st)) + "," + strconv.Itoa(int(fin)) + ")")
 					pos = se.InsertBefore(i.Value.(*Word), pos)
 					pos = pos.Next()
 					st = st + int(step)
@@ -492,7 +492,7 @@ func (this *Dictionary) Analyze(se *Sentence) {
 					contr = true
 				}
 
-				LOG.Trace("   Erasing " + pos.Value.(*Word).getForm())
+				LOG.Trace("   Erasing " + pos.Value.(*Word).GetForm())
 				q := pos
 				q = q.Prev()
 				se.Remove(pos)

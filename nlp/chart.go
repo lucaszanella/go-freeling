@@ -164,7 +164,7 @@ func (this *Chart) loadSentence(s *Sentence, k int) {
 	l := list.New()
 	for w = s.Front(); w != nil; w = w.Next() {
 		ce := list.New()
-		//println("Processing word " + w.Value.(*Word).getForm())
+		//println("Processing word " + w.Value.(*Word).GetForm())
 		for a := w.Value.(*Word).selectedBegin(k).Element; a != w.Value.(*Word).selectedBegin(k).Next(); a = a.Next() {
 			//println("selected tags")
 			e := NewEdgeFromString(a.Value.(*Analysis).getTag(), l, 0)

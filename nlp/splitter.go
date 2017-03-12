@@ -130,11 +130,11 @@ func (this *Splitter) Split(st *SplitterStatus, v *list.List, flush bool, ls *li
 	ls = ls.Init()
 	LOG.Trace("Looking for a sentence marker. Max no split is " + strconv.Itoa(int(this.SPLIT_MaxWords)))
 	for w := v.Front(); w != nil; w = w.Next() {
-		m := this.markers[w.Value.(*Word).getForm()]
+		m := this.markers[w.Value.(*Word).GetForm()]
 		checkSplit := true
 
 		if st.BetweenMark && !this.SPLIT_AllowBetweenMarkers && m != 0 && m == If(m > SAME, 1, -1).(int)*st.MarkType.Front().Value.(int) {
-			LOG.Trace("End no split period. marker " + w.Value.(*Word).getForm() + " code: " + strconv.Itoa(m))
+			LOG.Trace("End no split period. marker " + w.Value.(*Word).GetForm() + " code: " + strconv.Itoa(m))
 			st.MarkType.Remove(st.MarkType.Front())
 			st.MarkForm.Remove(st.MarkForm.Front())
 			if st.MarkForm.Len() == 0 {
@@ -147,15 +147,15 @@ func (this *Splitter) Split(st *SplitterStatus, v *list.List, flush bool, ls *li
 			st.buffer.PushBack(w.Value.(*Word))
 			checkSplit = false
 		} else if m > 0 && !this.SPLIT_AllowBetweenMarkers {
-			st.MarkForm.PushFront(w.Value.(*Word).getForm())
+			st.MarkForm.PushFront(w.Value.(*Word).GetForm())
 			st.MarkType.PushFront(m)
-			LOG.Trace("Start no split periood, marker " + w.Value.(*Word).getForm() + " code:" + strconv.Itoa(m))
+			LOG.Trace("Start no split periood, marker " + w.Value.(*Word).GetForm() + " code:" + strconv.Itoa(m))
 			st.BetweenMark = true
 			st.NoSplitCount++
 			st.buffer.PushBack(w.Value.(*Word))
 			checkSplit = false
 		} else if st.BetweenMark {
-			LOG.Trace("no-split flag continues set. word " + w.Value.(*Word).getForm() + " expecting code " + strconv.Itoa(st.MarkType.Front().Value.(int)) + " (closing " + st.MarkForm.Front().Value.(string))
+			LOG.Trace("no-split flag continues set. word " + w.Value.(*Word).GetForm() + " expecting code " + strconv.Itoa(st.MarkType.Front().Value.(int)) + " (closing " + st.MarkForm.Front().Value.(string))
 			st.NoSplitCount++
 			if this.SPLIT_MaxWords == 0 || st.NoSplitCount <= int(this.SPLIT_MaxWords) {
 				checkSplit = false
@@ -168,10 +168,10 @@ func (this *Splitter) Split(st *SplitterStatus, v *list.List, flush bool, ls *li
 		}
 
 		if checkSplit {
-			e := this.enders[w.Value.(*Word).getForm()]
+			e := this.enders[w.Value.(*Word).GetForm()]
 			if e {
 				if e || this.endOfSentence(w, v) {
-					LOG.Trace("Sentence marker [" + w.Value.(*Word).getForm() + "] found")
+					LOG.Trace("Sentence marker [" + w.Value.(*Word).GetForm() + "] found")
 					st.buffer.PushBack(w.Value.(*Word))
 					st.nsentence++
 					st.buffer.sentID = strconv.Itoa(st.nsentence)
@@ -182,11 +182,11 @@ func (this *Splitter) Split(st *SplitterStatus, v *list.List, flush bool, ls *li
 					st = this.OpenSession()
 					st.nsentence = nsentence
 				} else {
-					LOG.Trace(w.Value.(*Word).getForm() + " is not a sentence marker here")
+					LOG.Trace(w.Value.(*Word).GetForm() + " is not a sentence marker here")
 					st.buffer.PushBack(w.Value.(*Word))
 				}
 			} else {
-				LOG.Trace(w.Value.(*Word).getForm() + " is not a sentence marker here")
+				LOG.Trace(w.Value.(*Word).GetForm() + " is not a sentence marker here")
 				st.buffer.PushBack(w.Value.(*Word))
 			}
 		}
@@ -210,7 +210,7 @@ func (this *Splitter) endOfSentence(w *list.Element, v *list.List) bool {
 	} else {
 		r := w
 		r = r.Next()
-		f := r.Value.(*Word).getForm()
+		f := r.Value.(*Word).GetForm()
 
 		return strings.Title(f) == f || this.starters.Has(f)
 	}
